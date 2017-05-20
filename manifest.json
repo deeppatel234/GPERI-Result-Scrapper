@@ -7,7 +7,7 @@
     "description": "Scrape GTU Result",
 
     "browser_action": {
-        "default_title": "GTU",
+        "default_title": "GTU"
     },
 
     "content_scripts": [
