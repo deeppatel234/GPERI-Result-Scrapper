@@ -5,22 +5,10 @@
 
 
     "description": "Scrape GTU Result",
-    /*"icons": {
-    	"18": "/static/images/icons/icon18.png",
-        "48": "/static/images/icons/icon48.png",
-        "64": "/static/images/icons/icon64.png",
-        "128": "/static/images/icons/icon128.png"
-    },*/
 
     "browser_action": {
         "default_title": "GTU",
-        "default_popup": "popup.html"
     },
-/*
-    "background": {
-        "persistent": false,
-        "scripts": ["background.js"]
-    },*/
 
     "content_scripts": [
         {
