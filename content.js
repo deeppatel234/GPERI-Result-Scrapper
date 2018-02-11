@@ -1,8 +1,109 @@
-
 if((window.location.href).indexOf('gtu.ac.in') != -1 && (window.location.href).indexOf('result') != -1)
 {
 	
 	$(document).ready(function() {
+
+		function getServerPayload() {
+			var $subjectTables = document.querySelectorAll("#tblMR_DI table.Rgrid")[1];
+	
+			function getSubjects($table) {
+				if (!$table) {
+					return {}
+				}
+				var subjectRow = $table.querySelector('tbody').children;
+				var subject = []
+				for (row in subjectRow) {
+					let subjectColumn = subjectRow[row].children;
+					let index = 0;
+					var code;
+					var temp = {};
+					for (col in subjectColumn) {
+						if (index == 0) {
+							temp['code'] = subjectColumn[col].innerText;
+						} else if (index == 1) {
+							temp['name'] = subjectColumn[col].innerText;
+						}
+						
+						if (col == 2 && subjectColumn.length === 6 ) {
+							continue;
+						}
+
+						if (index == 2) {
+							let theory = subjectColumn[col].innerText.trim().split(/\s+/);
+							temp['theoryese'] = theory[0];
+							temp['theorypa'] = theory[1];
+							temp['theorytotal'] = theory[2];
+						} else if (index == 3) {
+							let practical = subjectColumn[col].innerText.trim().split(/\s+/);
+							temp['practicalese'] = practical[0];
+							temp['practicalpa'] = practical[1];
+							temp['practicaltotal'] = practical[2];
+						} else if (index == 4) {
+							temp['subjectgrade'] = subjectColumn[col].innerText;
+						}
+						index++;
+					}
+					if (Object.keys(temp).length !== 0) {
+						subject.push(temp);
+					}
+				}
+
+				return {subject};
+			}
+	
+			function getGrades() {
+				var gradeId = {
+					'CGPA': 'lblCGPA',
+					'CPI': 'lblCPI',
+					'Total Backlog': 'lblTotalBack',
+					'SPI': 'lblSPI',
+					'Current Sem. Backlog': 'lblCUPBack',
+				}
+				var grades = {};
+				for (id in gradeId) {
+					if (document.getElementById(gradeId[id])) {
+						grades[id] = document.getElementById(gradeId[id]).innerHTML;
+					}
+				}
+				return grades;
+			}
+	
+			function getStudentInfo() {
+				var studentInfoId = {
+					'name': 'lblName',
+					'enroll': 'lblEnrollmentNo',
+					'examnumber': 'lblExam',
+					'sem': 'lblExamName',
+					'branch': 'lblBranchName',
+					//'declared_date': 'lblDeclaredOn',
+				}
+	
+				var studentInfo = {};
+	
+				for ( id in studentInfoId ) {
+					studentInfo[id] = document.getElementById(studentInfoId[id]).innerHTML;
+				}
+	
+				return studentInfo;
+			}
+	
+			function getServerCredentials() {
+				return {
+					password: 'deep@1996',
+					username: 'deep'
+				}
+			}
+	
+			var serverPayload = {};
+	
+			Object.assign(serverPayload, getStudentInfo());
+			Object.assign(serverPayload, getServerCredentials());
+			Object.assign(serverPayload, getGrades());
+			Object.assign(serverPayload, getSubjects($subjectTables));
+	
+			console.log(serverPayload);
+			return serverPayload;
+		}
 
 		var canvas = document.createElement('canvas');
 		var context = canvas.getContext('2d');
@@ -25,77 +126,29 @@ if((window.location.href).indexOf('gtu.ac.in') != -1 && (window.location.href).i
 		
 		code = code.replace(/[^a-zA-Z0-9]/g, '');
 		code = code.toUpperCase();
-		console.log(code);
 		if(code.length <= 4 && code.length >= 3)
-		    $("#CodeNumberTextBox").val(code);
+			document.getElementById("CodeNumberTextBox").value = code;
 		else
-			$("#CodeNumberTextBox").val("0000");
+			document.getElementById("CodeNumberTextBox").value = "0000";
 		
-		var table = $(".Rgrid")[1];
-		var data = {};
+		var data = getServerPayload();
 
-		_.each($(table).find("tr"),function(TR){
-			var td = $(TR).find('td');
-			var values = [];
-			
-			if(td.length == 15){
-				_.each(td.slice(1),function(TD){
-					var abc = $(TD).html().trim();
-					try{
-						if($(abc).find("td").length == 0){
-							if(abc.length > 0){
-								values.push(abc);
-							}
-						}
-					}catch(e){
-						if(abc.indexOf("&amp;") != -1){
-							values.push(abc.replace("&amp;","and"));
-						}
-					}
-				});
-				data[$(td[0]).html().trim()] = values;
-			}
-		});
-
-		table = $(".Rgrid")[2];
-		_.each($(table).find("tr"),function(TR){
-			var td = $(TR).find('td');
-			_.each(td,function(TD){
-				var title = $(TD).html().trim();
-				title = title.substring(0,title.indexOf(':'));
-				var point = $($(TD).find('.csstotal')).html();
-				data[title] = point;
-			});
-		});
-
-		
-		var sem = $("#lblExamName").html().trim();
-		var branch = $("#lblBranchName").html().trim();
-
-		var enroll = $("#txtenroll").val().trim();
-		
-		data["enroll"] = enroll;
-		data["sem"] = sem;
-		data["branch"] = branch;
-		data["name"] = $('#lblName').html().trim();
-		data["examnumber"] = $('#lblExam').html().trim();
-
-		if($("#txtenroll").val() == ""){
-			$("#txtenroll").val(parseInt("0"));		
+		if (document.getElementById('txtenroll').value == ""){
+			document.getElementById('txtenroll').value = 0;	
 		}else{
-			if($("#lblmsg").html() == "Oppssss! Data not available." || data["SPI"] != null){
-				$("#txtenroll").val(parseInt(enroll) + 1);
+			if ((document.getElementById("lblmsg") && document.getElementById("lblmsg").innerHTML == "Oppssss! Data not available.") || data["SPI"] != null){
+				document.getElementById('txtenroll').value = parseInt(document.getElementById('txtenroll').value) + 1;
 				if(data["SPI"] != null){
 					console.log(data);
-					$.ajax({
-				        url: 'http://localhost:3000',
-				        type: 'POST',
-				        dataType: 'json',
-				        success: function (data) {
-				            console.log(data);
-				        },
-				        data: data
-				    });
+					var localurl = 'http://localhost:3000';
+					var serverurl = 'https://shrouded-falls-73362.herokuapp.com/';
+					fetch(serverurl, {
+						body: JSON.stringify(data),
+						headers: {
+							'content-type': 'application/json'
+						},
+						method: 'POST',
+					}).then(response => console.log('saved...'))
 				}
 			}
 		}
